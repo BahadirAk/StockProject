@@ -69,5 +69,9 @@ namespace StockProject.DataAccess.Repositories
         {
             _context.Entry(unchangedEntity).CurrentValues.SetValues(entity);
         }
+        public void UpdateModified(T entity)
+        {
+            _context.Entry(entity).State = EntityState.Modified;
+        }
     }
 }

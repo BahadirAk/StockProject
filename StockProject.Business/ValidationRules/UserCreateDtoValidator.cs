@@ -17,9 +17,6 @@ namespace StockProject.Business.ValidationRules
             this.RuleFor(x => x.Username).NotEmpty();
             this.RuleFor(x => x.Password).NotEmpty();
             this.RuleFor(x => x.Balance).NotEmpty();
-            this.RuleFor(x => x.CreatedDate).NotEmpty();
-            this.RuleFor(x => x.ModifiedDate).NotEmpty();
-            this.RuleFor(x => x.IsDeleted).NotEmpty();
         }
     }
 }

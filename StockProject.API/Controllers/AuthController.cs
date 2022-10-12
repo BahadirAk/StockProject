@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using StockProject.Business.Interfaces;
 using StockProject.Dtos.AuthDtos;
+using StockProject.Dtos.UserDtos;
 
 namespace StockProject.API.Controllers
 {
@@ -16,10 +17,18 @@ namespace StockProject.API.Controllers
         }
 
         [HttpPost]
-        public IActionResult Login(LoginDto dto)
+        [Route("Login")]
+        public async Task<IActionResult> Login(LoginDto dto)
         {
-            var user = _authService.Login(dto);
-            return user.Result.ResponseType == Common.ResponseType.Success ? Created("", new JwtTokenGenerator().GenerateToken(user.Result.Data)) : Ok(user.Result.Message);
+            var user = await _authService.LoginAsync(dto);
+            return user.ResponseType == Common.ResponseType.Success ? Created("", new JwtTokenGenerator().GenerateToken(user.Data)) : Ok(user.Message);
+        }
+        [HttpPost]
+        [Route("Register")]
+        public async Task<IActionResult> Register(UserCreateDto dto)
+        {
+            var addedUser = await _authService.RegisterAsync(dto);
+            return Created(string.Empty, addedUser);
         }
     }
 }

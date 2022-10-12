@@ -1,9 +1,11 @@
 ﻿using FluentValidation;
+using Microsoft.AspNetCore.Http;
 using StockProject.Business.Extensions;
 using StockProject.Business.Interfaces;
 using StockProject.Common;
 using StockProject.DataAccess.Interfaces;
 using StockProject.DataAccess.UnitOfWork;
+using StockProject.Dtos.Interfaces;
 using StockProject.Dtos.OrderDtos;
 using StockProject.Dtos.ProductDtos;
 using StockProject.Entities;
@@ -22,15 +24,19 @@ namespace StockProject.Business.Services
         private readonly IValidator<OrderUpdateDto> _updateDtoValidator;
         private readonly IUserService _userService;
         private readonly IProductService _productService;
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        private int UserId { get { return _httpContextAccessor.GetUserId(); } }
 
-        public OrderService(IUow uow, IValidator<OrderCreateDto> createDtoValidator, IValidator<OrderUpdateDto> updateDtoValidator, IUserService userService, IProductService productService) : base(createDtoValidator, updateDtoValidator, uow)
+        public OrderService(IUow uow, IValidator<OrderCreateDto> createDtoValidator, IValidator<OrderUpdateDto> updateDtoValidator, IUserService userService, IProductService productService, IHttpContextAccessor httpContextAccessor) : base(createDtoValidator, updateDtoValidator, uow)
         {
             _uow = uow;
             _createDtoValidator = createDtoValidator;
             _updateDtoValidator = updateDtoValidator;
             _userService = userService;
             _productService = productService;
+            _httpContextAccessor = httpContextAccessor;
         }
+        #region Get
         public async Task<IResponse<List<OrderListDto>>> GetAllAsync()
         {
             var data = await _uow.GetRepository<Order>().GetAllAsync();
@@ -139,6 +145,30 @@ namespace StockProject.Business.Services
             }
             return new Response<List<OrderListDto>>(ResponseType.NotFound, $"{userId} sine sahip data bulunamadı!!!");
         }
+        public async Task<IResponse<List<OrderListDto>>> GetOrdersByAuthorizedUserIdAsync()
+        {
+            var data = await _uow.GetRepository<Order>().GetAllAsync(x => x.UserId == UserId && !x.IsDeleted);
+            if (data != null)
+            {
+                List<OrderListDto> dto = new List<OrderListDto>();
+                foreach (var order in data)
+                {
+                    dto.Add(new OrderListDto
+                    {
+                        Id = order.Id,
+                        UserName = _userService.GetByIdAsync(order.UserId).Result.Data.Username,
+                        ProductName = _productService.GetByIdAsync(order.ProductId).Result.Data.Name,
+                        Quantity = order.Quantity,
+                        TotalPrice = order.TotalPrice,
+                        CreatedDate = order.CreatedDate,
+                        ModifiedDate = order.ModifiedDate,
+                        IsDeleted = order.IsDeleted
+                    });
+                }
+                return new Response<List<OrderListDto>>(ResponseType.Success, dto);
+            }
+            return new Response<List<OrderListDto>>(ResponseType.NotFound, $"{UserId} sine sahip data bulunamadı!!!");
+        }
         public async Task<IResponse<List<OrderListDto>>> GetOrdersByProductIdAsync(int productId)
         {
             var data = await _uow.GetRepository<Order>().GetAllAsync(x => x.ProductId == productId);
@@ -187,6 +217,8 @@ namespace StockProject.Business.Services
             }
             return new Response<List<OrderListDto>>(ResponseType.NotFound, $"{productId} sine sahip data bulunamadı!!!");
         }
+        #endregion
+        #region Create Update Remove
         public async Task<IResponse<OrderCreateDto>> CreateAsync(OrderCreateDto dto)
         {
             var validationResult = _createDtoValidator.Validate(dto);
@@ -194,7 +226,7 @@ namespace StockProject.Business.Services
             {
                 var entity = new Order
                 {
-                    UserId = dto.UserId,
+                    UserId = UserId,
                     ProductId = dto.ProductId,
                     Quantity = dto.Quantity,
                     TotalPrice = _productService.GetByIdAsync(dto.ProductId).Result.Data.Price * dto.Quantity,
@@ -202,9 +234,14 @@ namespace StockProject.Business.Services
                     ModifiedDate = DateTime.Now,
                     IsDeleted = false
                 };
-                await _uow.GetRepository<Order>().CreateAsync(entity);
-                await _uow.SaveChangesAsync();
-                return new Response<OrderCreateDto>(ResponseType.Success, dto);
+                var checkResult = await UpdateUserBalanceAndProductQuantityAsync(entity.ProductId, entity.UserId, entity.Quantity, entity.TotalPrice);
+                if (checkResult.ResponseType == ResponseType.Success)
+                {
+                    await _uow.GetRepository<Order>().CreateAsync(entity);
+                    await _uow.SaveChangesAsync();
+                    return new Response<OrderCreateDto>(ResponseType.Success, dto, "Sipariş başarıyla oluşturuldu!!!");
+                }
+                return new Response<OrderCreateDto>(ResponseType.ValidationError, dto, checkResult.Message);
             }
             return new Response<OrderCreateDto>(dto, validationResult.ConvertToCustomValidationError());
         }
@@ -241,7 +278,7 @@ namespace StockProject.Business.Services
                     var entity = new Order
                     {
                         Id = dto.Id,
-                        UserId = dto.UserId,
+                        UserId = UserId,
                         ProductId = dto.ProductId,
                         Quantity = dto.Quantity,
                         TotalPrice = _productService.GetByIdAsync(dto.ProductId).Result.Data.Price * dto.Quantity,
@@ -249,6 +286,7 @@ namespace StockProject.Business.Services
                         ModifiedDate = DateTime.Now,
                         IsDeleted = unchangedEntity.IsDeleted
                     };
+                    //await UpdateBalanceAndQuantityAsync(entity.UserId, entity.ProductId, entity.Quantity);
                     _uow.GetRepository<Order>().Update(entity, unchangedEntity);
                     await _uow.SaveChangesAsync();
                     return new Response<OrderUpdateDto>(ResponseType.Success, dto);
@@ -257,5 +295,65 @@ namespace StockProject.Business.Services
             }
             return new Response<OrderUpdateDto>(dto, validationResult.ConvertToCustomValidationError());
         }
+        #endregion
+        #region Balance ve Quantity İşlemleri
+        private async Task<IResponse> UpdateUserBalanceAndProductQuantityAsync(int productId, int userId, int quantity, decimal totalPrice)
+        {
+            var productResult = UpdateProductQuantityAsync(productId, quantity);
+            if (productResult.Result.ResponseType == ResponseType.Success)
+            {
+                var userResult = UpdateUserBalanceAsync(userId, totalPrice);
+                if (userResult.Result.ResponseType == ResponseType.Success)
+                {
+                    return new Response(ResponseType.Success);
+                }
+                return new Response(ResponseType.ValidationError, "Kullanıcının yeterli bakiyesi bulunmamaktadır!!!");
+            }
+            return new Response(ResponseType.ValidationError, "Stokta yeteri miktarda ürün bulunmamaktadır!!!");
+        }
+        private async Task<IResponse> UpdateProductQuantityAsync(int productId, int quantity)
+        {
+            var product = _uow.GetRepository<Product>().GetByFilterAsync(x => x.Id == productId).Result;
+            if (product.Quantity >= quantity)
+            {
+                var updateProduct = new Product
+                {
+                    Id = product.Id,
+                    Name = product.Name,
+                    Quantity = product.Quantity - quantity,
+                    Price = product.Price,
+                    CategoryId = product.CategoryId,
+                    CreatedDate = product.CreatedDate,
+                    ModifiedDate = DateTime.Now,
+                    IsDeleted = product.IsDeleted
+                };
+                _uow.GetRepository<Product>().UpdateModified(updateProduct);
+                return new Response(ResponseType.Success);
+            }
+            return new Response(ResponseType.ValidationError);
+        }
+        private async Task<IResponse> UpdateUserBalanceAsync(int userId, decimal totalPrice)
+        {
+            var user = _uow.GetRepository<User>().GetByFilterAsync(x => x.Id == userId).Result;
+            if (user.Balance >= totalPrice)
+            {
+                var updateUser = new User
+                {
+                    Id = user.Id,
+                    Firstname = user.Firstname,
+                    Surname = user.Surname,
+                    Username = user.Username,
+                    Password = user.Password,
+                    Balance = user.Balance - totalPrice,
+                    CreatedDate = user.CreatedDate,
+                    ModifiedDate = DateTime.Now,
+                    IsDeleted = user.IsDeleted
+                };
+                _uow.GetRepository<User>().UpdateModified(updateUser);
+                return new Response(ResponseType.Success);
+            }
+            return new Response(ResponseType.ValidationError);
+        }
+        #endregion
     }
 }

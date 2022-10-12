@@ -18,6 +18,10 @@ namespace StockProject.Common
         {
             Data = data;
         }
+        public Response(ResponseType responseType, T data, string message) : base(responseType, message)
+        {
+            Data = data;
+        }
         public Response(T data, List<CustomValidationError> errors) : base(ResponseType.ValidationError)
         {
             ValidationErrors = errors;

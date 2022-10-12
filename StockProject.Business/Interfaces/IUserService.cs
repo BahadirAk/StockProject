@@ -14,7 +14,8 @@ namespace StockProject.Business.Interfaces
     public interface IUserService : IService<UserCreateDto, UserUpdateDto, UserListDto, User>
     {
         Task<IResponse<UserListDto>> GetByIdAsync(int id);
-        Task<IResponse<UserListDto>> CheckUserAsync(LoginDto dto);
+        Task<IResponse<UserListDto>> CheckUserLoginAsync(LoginDto dto);
         Task<IResponse<List<RoleListDto>>> GetRolesByUserIdAsync(int userId);
+        Task<IResponse<UserCreateDto>> CreateWithRoleAsync(UserCreateDto dto);
     }
 }

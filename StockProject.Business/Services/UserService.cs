@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using StockProject.Business.Extensions;
 using StockProject.Business.Interfaces;
 using StockProject.Common;
 using StockProject.DataAccess.UnitOfWork;
@@ -18,11 +19,13 @@ namespace StockProject.Business.Services
     {
         private readonly IUow _uow;
         private readonly IValidator<LoginDto> _loginDtoValidator;
+        private readonly IValidator<UserCreateDto> _createDtoValidator;
 
         public UserService(IUow uow, IValidator<UserCreateDto> createDtoValidator, IValidator<UserUpdateDto> updateDtoValidator, IValidator<LoginDto> loginDtoValidator) : base(createDtoValidator, updateDtoValidator, uow)
         {
             _uow = uow;
             _loginDtoValidator = loginDtoValidator;
+            _createDtoValidator = createDtoValidator;
         }
         public async Task<IResponse<UserListDto>> GetByIdAsync(int id)
         {
@@ -45,7 +48,7 @@ namespace StockProject.Business.Services
             }
             return new Response<UserListDto>(ResponseType.NotFound, $"{id} sine sahip kullanıcı bulunamadı!!!");
         }
-        public async Task<IResponse<UserListDto>> CheckUserAsync(LoginDto dto)
+        public async Task<IResponse<UserListDto>> CheckUserLoginAsync(LoginDto dto)
         {
             var validationResult = _loginDtoValidator.Validate(dto);
             if (validationResult.IsValid)
@@ -91,6 +94,41 @@ namespace StockProject.Business.Services
                 return new Response<List<RoleListDto>>(ResponseType.Success, dto);
             }
             return new Response<List<RoleListDto>>(ResponseType.NotFound, "Rol bulunamadı!!!");
+        }
+        public async Task<IResponse<UserCreateDto>> CreateWithRoleAsync(UserCreateDto dto)
+        {
+            var validationResult = _createDtoValidator.Validate(dto);
+            if (validationResult.IsValid)
+            {
+                var user = await _uow.GetRepository<User>().GetByFilterAsync(x => x.Username == dto.Username);
+                if (user == null)
+                {
+                    var mappedUser = new User
+                    {
+                        Firstname = dto.Firstname,
+                        Surname = dto.Surname,
+                        Username = dto.Username,
+                        Password = dto.Password,
+                        Balance = dto.Balance,
+                        CreatedDate = DateTime.Now,
+                        ModifiedDate = DateTime.Now,
+                        IsDeleted = false
+                    };
+                    await _uow.GetRepository<User>().CreateAsync(mappedUser);
+                    await _uow.GetRepository<UserRole>().CreateAsync(new UserRole
+                    {
+                        User = mappedUser,
+                        RoleId = 2,
+                        CreatedDate = DateTime.Now,
+                        ModifiedDate = DateTime.Now,
+                        IsDeleted = false
+                    });
+                    await _uow.SaveChangesAsync();
+                    return new Response<UserCreateDto>(ResponseType.Success, dto);
+                }
+                return new Response<UserCreateDto>(ResponseType.ValidationError, $"{dto.Username} böyle bir kullanıcı mevcut!!!");
+            }
+            return new Response<UserCreateDto>(dto, validationResult.ConvertToCustomValidationError());
         }
     }
 }

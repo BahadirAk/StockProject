@@ -9,7 +9,6 @@ namespace StockProject.Dtos.OrderDtos
 {
     public class OrderCreateDto : IDto
     {
-        public int UserId { get; set; }
         public int ProductId { get; set; }
         public int Quantity { get; set; }
     }

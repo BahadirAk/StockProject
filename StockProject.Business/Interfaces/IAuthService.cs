@@ -12,6 +12,7 @@ namespace StockProject.Business.Interfaces
 {
     public interface IAuthService
     {
-        Task<IResponse<UserListDto>> Login(LoginDto dto);
+        Task<IResponse<UserListDto>> LoginAsync(LoginDto dto);
+        Task<IResponse<UserListDto>> RegisterAsync(UserCreateDto dto);
     }
 }

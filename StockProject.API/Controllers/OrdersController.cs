@@ -107,7 +107,7 @@ namespace StockProject.API.Controllers
         [Route("getMyOrders")]
         public async Task<IActionResult> GetMyOrders()
         {
-            var myOrders = await _orderService.GetActiveOrdersByUserIdAsync(int.Parse(HttpContext.User.Claims.First(x => x.Type == ClaimTypes.NameIdentifier).Value));
+            var myOrders = await _orderService.GetOrdersByAuthorizedUserIdAsync();
             return Ok(myOrders);
         }
     }

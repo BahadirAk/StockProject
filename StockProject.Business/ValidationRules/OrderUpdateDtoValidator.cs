@@ -13,7 +13,6 @@ namespace StockProject.Business.ValidationRules
         public OrderUpdateDtoValidator()
         {
             this.RuleFor(x => x.Id);
-            this.RuleFor(x => x.UserId).NotEmpty();
             this.RuleFor(x => x.ProductId).NotEmpty();
             this.RuleFor(x => x.Quantity).NotEmpty();
         }

@@ -21,5 +21,6 @@ namespace StockProject.DataAccess.Interfaces
         void Remove(T entity);
         Task CreateAsync(T entity);
         void Update(T entity, T unchangedEntity);
+        void UpdateModified(T entity);
     }
 }
