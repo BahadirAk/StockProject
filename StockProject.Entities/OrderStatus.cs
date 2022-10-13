@@ -6,10 +6,8 @@ using System.Threading.Tasks;
 
 namespace StockProject.Entities
 {
-    public class Order : BaseEntity
+    public class OrderStatus : BaseEntity
     {
-        public int Quantity { get; set; }
-        public decimal TotalPrice { get; set; }
-
+        public string Definition { get; set; }
     }
 }

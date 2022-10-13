@@ -10,6 +10,8 @@ using StockProject.DataAccess.Interfaces;
 using StockProject.DataAccess.Repositories;
 using StockProject.DataAccess.UnitOfWork;
 using StockProject.Dtos.AuthDtos;
+using StockProject.Dtos.BasketDtos;
+using StockProject.Dtos.BasketProductDtos;
 using StockProject.Dtos.CategoryDtos;
 using StockProject.Dtos.OrderDtos;
 using StockProject.Dtos.ProductDtos;
@@ -38,12 +40,13 @@ namespace StockProject.Business.DependecyResolvers.Microsoft
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IProductService, ProductService>();
-            services.AddScoped<IOrderService, OrderService>();
+            //services.AddScoped<IOrderService, OrderService>();
+            services.AddScoped<IBasketService, BasketService>();
 
             services.AddTransient<IValidator<CategoryCreateDto>, CategoryCreateDtoValidator>();
             services.AddTransient<IValidator<CategoryUpdateDto>, CategoryUpdateDtoValidator>();
-            services.AddTransient<IValidator<OrderCreateDto>, OrderCreateDtoValidator>();
-            services.AddTransient<IValidator<OrderUpdateDto>, OrderUpdateDtoValidator>();
+            //services.AddTransient<IValidator<OrderCreateDto>, OrderCreateDtoValidator>();
+            //services.AddTransient<IValidator<OrderUpdateDto>, OrderUpdateDtoValidator>();
             services.AddTransient<IValidator<ProductCreateDto>, ProductCreateDtoValidator>();
             services.AddTransient<IValidator<ProductUpdateDto>, ProductUpdateDtoValidator>();
             services.AddTransient<IValidator<UserRoleCreateDto>, UserRoleCreateDtoValidator>();
@@ -51,6 +54,10 @@ namespace StockProject.Business.DependecyResolvers.Microsoft
             services.AddTransient<IValidator<UserCreateDto>, UserCreateDtoValidator>();
             services.AddTransient<IValidator<UserUpdateDto>, UserUpdateDtoValidator>();
             services.AddTransient<IValidator<LoginDto>, LoginDtoValidator>();
+            services.AddTransient <IValidator<BasketCreateDto>, BasketCreateDtoValidator>();
+            services.AddTransient <IValidator<BasketUpdateDto>, BasketUpdateDtoValidator>();
+            services.AddTransient<IValidator<BasketProductCreateDto>, BasketProductCreateDtoValidator>();
+            services.AddTransient<IValidator<BasketProductUpdateDto>, BasketProductUpdateDtoValidator>();
         }
     }
 }

@@ -16,6 +16,5 @@ namespace StockProject.Entities
 
         //NavigationProperties
         public List<UserRole> UserRoles { get; set; }
-        public List<Order> Orders { get; set; }
     }
 }
