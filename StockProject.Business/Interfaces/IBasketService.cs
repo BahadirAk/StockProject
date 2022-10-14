@@ -14,6 +14,7 @@ namespace StockProject.Business.Interfaces
     {
         Task<IResponse<BasketListDto>> GetByUserIdAsync();
         Task<IResponse<BasketProductCreateDto>> CreateProductForBasketAsync(BasketProductCreateDto dto);
+        Task<IResponse<BasketProductUpdateDto>> UpdateProductFromBasketAsync(BasketProductUpdateDto dto);
         Task<IResponse> RemoveProductFromBasketAsync(int productId);
     }
 }

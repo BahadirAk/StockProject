@@ -12,11 +12,11 @@ namespace StockProject.Business.ValidationRules
     {
         public BasketProductUpdateDtoValidator()
         {
-            this.RuleFor(x => x.Id).NotEmpty();
-            this.RuleFor(x => x.BasketId).NotEmpty();
+            //this.RuleFor(x => x.Id).NotEmpty();
+            //this.RuleFor(x => x.BasketId).NotEmpty();
             this.RuleFor(x => x.ProductId).NotEmpty();
             this.RuleFor(x => x.Quantity).NotEmpty();
-            this.RuleFor(x => x.TotalPrice).NotEmpty();
+            //this.RuleFor(x => x.TotalPrice).NotEmpty();
         }
     }
 }

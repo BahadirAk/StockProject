@@ -34,6 +34,14 @@ namespace StockProject.API.Controllers
             return Created(string.Empty, addProduct);
         }
         [Authorize(Roles = "Member")]
+        [HttpPost]
+        [Route("updateProductToMyBasket")]
+        public async Task<IActionResult> UpdateProductToMyBasket(BasketProductUpdateDto dto)
+        {
+            var updateProduct = await _basketService.UpdateProductFromBasketAsync(dto);
+            return Created(string.Empty, updateProduct);
+        }
+        [Authorize(Roles = "Member")]
         [HttpDelete]
         [Route("removeProductFromMyBasket")]
         public async Task<IActionResult> RemoveProductFromMyBasket(int productId)

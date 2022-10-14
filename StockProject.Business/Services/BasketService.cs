@@ -22,14 +22,16 @@ namespace StockProject.Business.Services
         private readonly IProductService _productService;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IValidator<BasketProductCreateDto> _basketProductCreateDtoValidator;
+        private readonly IValidator<BasketProductUpdateDto> _basketProductUpdateDtoValidator;
         private int UserId { get { return _httpContextAccessor.GetUserId(); } }
-        public BasketService(IValidator<BasketCreateDto> createDtoValidator, IValidator<BasketUpdateDto> updateDtoValidator, IUow uow, IUserService userService, IProductService productService, IHttpContextAccessor httpContextAccessor, IValidator<BasketProductCreateDto> basketProductCreateDtoValidator) : base(createDtoValidator, updateDtoValidator, uow)
+        public BasketService(IValidator<BasketCreateDto> createDtoValidator, IValidator<BasketUpdateDto> updateDtoValidator, IUow uow, IUserService userService, IProductService productService, IHttpContextAccessor httpContextAccessor, IValidator<BasketProductCreateDto> basketProductCreateDtoValidator, IValidator<BasketProductUpdateDto> basketProductUpdateDtoValidator) : base(createDtoValidator, updateDtoValidator, uow)
         {
             _uow = uow;
             _userService = userService;
             _productService = productService;
             _httpContextAccessor = httpContextAccessor;
             _basketProductCreateDtoValidator = basketProductCreateDtoValidator;
+            _basketProductUpdateDtoValidator = basketProductUpdateDtoValidator;
         }
         public async Task<IResponse<BasketListDto>> GetByUserIdAsync()
         {
@@ -119,6 +121,56 @@ namespace StockProject.Business.Services
                 return new Response<BasketProductCreateDto>(ResponseType.ValidationError, "İşlem başarısız!!!");
             }
             return new Response<BasketProductCreateDto>(dto, validationResult.ConvertToCustomValidationError());
+        }
+        public async Task<IResponse<BasketProductUpdateDto>> UpdateProductFromBasketAsync(BasketProductUpdateDto dto)
+        {
+            var validationResult = _basketProductUpdateDtoValidator.Validate(dto);
+            if (validationResult.IsValid)
+            {
+                var basket = await _uow.GetRepository<Basket>().GetByFilterAsync(x => x.UserId == UserId);
+                var unchangedEntity = await _uow.GetRepository<BasketProduct>().GetByFilterAsync(x => x.BasketId == basket.Id && x.ProductId == dto.ProductId);
+                decimal lastBasketPrice = 0;
+                if (unchangedEntity != null)
+                {
+                    var entity = new BasketProduct
+                    {
+                        Id = unchangedEntity.Id,
+                        BasketId = unchangedEntity.BasketId,
+                        ProductId = unchangedEntity.ProductId,
+                        CreatedDate = unchangedEntity.CreatedDate,
+                        ModifiedDate = DateTime.Now,
+                        IsDeleted = unchangedEntity.IsDeleted
+                    };
+                    if(dto.IsIncrease == true)
+                    {
+                        entity.Quantity = unchangedEntity.Quantity + dto.Quantity;
+                        entity.TotalPrice = unchangedEntity.TotalPrice + (dto.Quantity * _productService.GetByIdAsync(dto.ProductId).Result.Data.Price);
+                        lastBasketPrice = entity.TotalPrice - unchangedEntity.TotalPrice;
+                    }
+                    else
+                    {
+                        var changedPrice = dto.Quantity * _productService.GetByIdAsync(dto.ProductId).Result.Data.Price;
+                        entity.Quantity = unchangedEntity.Quantity - dto.Quantity;
+                        entity.TotalPrice = unchangedEntity.TotalPrice - changedPrice;
+                        lastBasketPrice = changedPrice;
+                    }
+                    if (entity.Quantity <= 0)
+                    {
+                        var result = await RemoveProductFromBasketAsync(dto.ProductId);
+                        return result.ResponseType == ResponseType.Success ? new Response<BasketProductUpdateDto>(ResponseType.Success, dto) : new Response<BasketProductUpdateDto>(ResponseType.ValidationError, "İşlem başarısız!!!");
+                    }
+                    var updateResult = await UpdateBasketSubTotalAsync(entity.BasketId, lastBasketPrice, dto.IsIncrease);
+                    if (updateResult.ResponseType == ResponseType.Success)
+                    {
+                        _uow.GetRepository<BasketProduct>().UpdateModified(entity);
+                        await _uow.SaveChangesAsync();
+                        return new Response<BasketProductUpdateDto>(ResponseType.Success, dto);
+                    }
+                    return new Response<BasketProductUpdateDto>(ResponseType.ValidationError, "İşlem başarısız!!!");
+                }
+                return new Response<BasketProductUpdateDto>(ResponseType.NotFound, $"{dto.ProductId} sine sahip data bulunamadı!!!");
+            }
+            return new Response<BasketProductUpdateDto>(dto, validationResult.ConvertToCustomValidationError());
         }
         public async Task<IResponse> RemoveProductFromBasketAsync(int productId)
         {
