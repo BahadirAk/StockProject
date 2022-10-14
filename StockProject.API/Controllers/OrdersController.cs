@@ -52,22 +52,6 @@ namespace StockProject.API.Controllers
             var orders = await _orderService.GetActiveOrdersByUserIdAsync(userId);
             return Ok(orders.Data);
         }
-        [Authorize(Roles = "Admin")]
-        [HttpGet]
-        [Route("getOrdersByProductId")]
-        public async Task<IActionResult> GetOrdersByProductId(int productId)
-        {
-            var orders = await _orderService.GetOrdersByProductIdAsync(productId);
-            return Ok(orders.Data);
-        }
-        [Authorize(Roles = "Admin")]
-        [HttpGet]
-        [Route("getActiveOrdersByProductId")]
-        public async Task<IActionResult> GetActiveOrdersByProductId(int productId)
-        {
-            var orders = await _orderService.GetActiveOrdersByProductIdAsync(productId);
-            return Ok(orders.Data);
-        }
         [Authorize(Roles = "Member")]
         [HttpPost]
         [Route("createOrder")]

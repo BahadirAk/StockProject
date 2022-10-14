@@ -13,8 +13,6 @@ namespace StockProject.Business.Interfaces
     {
         Task<IResponse<List<OrderListDto>>> GetOrdersByUserIdAsync(int userId);
         Task<IResponse<List<OrderListDto>>> GetActiveOrdersByUserIdAsync(int userId);
-        Task<IResponse<List<OrderListDto>>> GetOrdersByProductIdAsync(int productId);
-        Task<IResponse<List<OrderListDto>>> GetActiveOrdersByProductIdAsync(int productId);
         Task<IResponse<List<OrderListDto>>> GetOrdersByAuthorizedUserIdAsync();
     }
 }

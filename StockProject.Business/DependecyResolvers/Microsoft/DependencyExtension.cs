@@ -40,13 +40,13 @@ namespace StockProject.Business.DependecyResolvers.Microsoft
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IProductService, ProductService>();
-            //services.AddScoped<IOrderService, OrderService>();
+            services.AddScoped<IOrderService, OrderService>();
             services.AddScoped<IBasketService, BasketService>();
 
             services.AddTransient<IValidator<CategoryCreateDto>, CategoryCreateDtoValidator>();
             services.AddTransient<IValidator<CategoryUpdateDto>, CategoryUpdateDtoValidator>();
-            //services.AddTransient<IValidator<OrderCreateDto>, OrderCreateDtoValidator>();
-            //services.AddTransient<IValidator<OrderUpdateDto>, OrderUpdateDtoValidator>();
+            services.AddTransient<IValidator<OrderCreateDto>, OrderCreateDtoValidator>();
+            services.AddTransient<IValidator<OrderUpdateDto>, OrderUpdateDtoValidator>();
             services.AddTransient<IValidator<ProductCreateDto>, ProductCreateDtoValidator>();
             services.AddTransient<IValidator<ProductUpdateDto>, ProductUpdateDtoValidator>();
             services.AddTransient<IValidator<UserRoleCreateDto>, UserRoleCreateDtoValidator>();

@@ -33,6 +33,45 @@ namespace StockProject.Business.Services
             _basketProductCreateDtoValidator = basketProductCreateDtoValidator;
             _basketProductUpdateDtoValidator = basketProductUpdateDtoValidator;
         }
+        public async Task<IResponse<BasketListDto>> GetByIdAsync(int id)
+        {
+            var data = await _uow.GetRepository<Basket>().GetByFilterAsync(x => x.Id == id);
+            if (data != null)
+            {
+                BasketListDto dto = new BasketListDto
+                {
+                    Id = data.Id,
+                    UserName = _userService.GetByIdAsync(data.UserId).Result.Data.Username,
+                    SubTotal = data.SubTotal,
+                    CreateDate = data.CreatedDate,
+                    ModifiedDate = data.ModifiedDate,
+                    IsDeleted = data.IsDeleted
+                };
+                var productsInBasket = await _uow.GetRepository<BasketProduct>().GetAllAsync(x => x.BasketId == dto.Id && !x.IsDeleted);
+                if (productsInBasket.Count > 0)
+                {
+                    List<BasketProductListDto> productsInUserBasket = new List<BasketProductListDto>();
+                    foreach (var productInBasket in productsInBasket)
+                    {
+                        productsInUserBasket.Add(new BasketProductListDto
+                        {
+                            Id = productInBasket.Id,
+                            BasketId = dto.Id,
+                            ProductName = _productService.GetByIdAsync(productInBasket.ProductId).Result.Data.Name,
+                            Quantity = productInBasket.Quantity,
+                            TotalPrice = productInBasket.TotalPrice,
+                            CreatedDate = productInBasket.CreatedDate,
+                            ModifiedDate = productInBasket.ModifiedDate,
+                            IsDeleted = productInBasket.IsDeleted
+                        });
+                    }
+                    dto.BasketProducts = productsInUserBasket;
+                    return new Response<BasketListDto>(ResponseType.Success, dto);
+                }
+                return new Response<BasketListDto>(ResponseType.Success, dto, "Sepette henüz ürün bulunmamaktadır!!!");
+            }
+            return new Response<BasketListDto>(ResponseType.NotFound, $"{id} sine sahip data bulunamadı!!!");
+        }
         public async Task<IResponse<BasketListDto>> GetByUserIdAsync()
         {
             var data = await _uow.GetRepository<Basket>().GetByFilterAsync(x => x.UserId == UserId && !x.IsDeleted);
