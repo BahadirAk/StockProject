@@ -30,8 +30,16 @@ namespace StockProject.API.Controllers
         [Route("addProductToMyBasket")]
         public async Task<IActionResult> AddProductToMyBasket(BasketProductCreateDto dto)
         {
-            var addProduct = await _basketService.CreateProductForBasket(dto);
+            var addProduct = await _basketService.CreateProductForBasketAsync(dto);
             return Created(string.Empty, addProduct);
+        }
+        [Authorize(Roles = "Member")]
+        [HttpDelete]
+        [Route("removeProductFromMyBasket")]
+        public async Task<IActionResult> RemoveProductFromMyBasket(int productId)
+        {
+            var removeProduct = await _basketService.RemoveProductFromBasketAsync(productId);
+            return NoContent();
         }
     }
 }

@@ -70,7 +70,7 @@ namespace StockProject.Business.Services
             }
             return new Response<BasketListDto>(ResponseType.NotFound, $"{UserId} sine sahip data bulunamadı!!!");
         }
-        public async Task<IResponse<BasketProductCreateDto>> CreateProductForBasket(BasketProductCreateDto dto)
+        public async Task<IResponse<BasketProductCreateDto>> CreateProductForBasketAsync(BasketProductCreateDto dto)
         {
             var validationResult = _basketProductCreateDtoValidator.Validate(dto);
             if (validationResult.IsValid)
@@ -89,7 +89,7 @@ namespace StockProject.Business.Services
                         ModifiedDate = DateTime.Now,
                         IsDeleted = false
                     };
-                    var createResult = await UpdateBasketSubTotal(entity.BasketId, entity.TotalPrice);
+                    var createResult = await UpdateBasketSubTotalAsync(entity.BasketId, entity.TotalPrice, true);
                     if (createResult.ResponseType == ResponseType.Success)
                     {
                         await _uow.GetRepository<BasketProduct>().CreateAsync(entity);
@@ -109,7 +109,7 @@ namespace StockProject.Business.Services
                     ModifiedDate = DateTime.Now,
                     IsDeleted = control.IsDeleted
                 };
-                var updateResult = await UpdateBasketSubTotal(data.BasketId, data.TotalPrice - control.TotalPrice);
+                var updateResult = await UpdateBasketSubTotalAsync(data.BasketId, data.TotalPrice - control.TotalPrice, true);
                 if (updateResult.ResponseType == ResponseType.Success)
                 {
                     _uow.GetRepository<BasketProduct>().UpdateModified(data);
@@ -120,21 +120,58 @@ namespace StockProject.Business.Services
             }
             return new Response<BasketProductCreateDto>(dto, validationResult.ConvertToCustomValidationError());
         }
-        private async Task<IResponse> UpdateBasketSubTotal(int basketId, decimal totalPrice)
+        public async Task<IResponse> RemoveProductFromBasketAsync(int productId)
+        {
+            var basket = await _uow.GetRepository<Basket>().GetByFilterAsync(x => x.UserId == UserId);
+            var unchangedEntity = await _uow.GetRepository<BasketProduct>().GetByFilterAsync(x => x.BasketId == basket.Id && x.ProductId == productId);
+            if (unchangedEntity != null)
+            {
+                var data = new BasketProduct
+                {
+                    Id = unchangedEntity.Id,
+                    BasketId = unchangedEntity.BasketId,
+                    ProductId = unchangedEntity.ProductId,
+                    Quantity = unchangedEntity.Quantity,
+                    TotalPrice = unchangedEntity.TotalPrice,
+                    CreatedDate = unchangedEntity.CreatedDate,
+                    ModifiedDate = DateTime.Now,
+                    IsDeleted = true
+                };
+                var updateResult = await UpdateBasketSubTotalAsync(data.BasketId, data.TotalPrice, false);
+                if (updateResult.ResponseType == ResponseType.Success)
+                {
+                    _uow.GetRepository<BasketProduct>().UpdateModified(data);
+                    await _uow.SaveChangesAsync();
+                    return new Response(ResponseType.Success, "Silme işlemi başarıyla gerçekleştirildi!!!");
+                }
+                return new Response(ResponseType.ValidationError, "İşlem Başarısız!!!");
+            }
+            return new Response(ResponseType.NotFound, $"{productId} sine sahip data bulunamadı!!!");
+        }
+        #region Helper
+        private async Task<IResponse> UpdateBasketSubTotalAsync(int basketId, decimal totalPrice, bool isAdded)
         {
             var basket = await _uow.GetRepository<Basket>().GetByFilterAsync(x => x.Id == basketId && !x.IsDeleted);
-            var entity = new Basket
+            Basket entity = new Basket
             {
                 Id = basketId,
                 UserId = basket.UserId,
-                SubTotal = basket.SubTotal + totalPrice,
                 CreatedDate = basket.CreatedDate,
                 ModifiedDate = DateTime.Now,
                 IsDeleted = basket.IsDeleted,
                 BasketProducts = basket.BasketProducts
             };
+            if (isAdded == true)
+            {
+                entity.SubTotal = basket.SubTotal + totalPrice;
+            }
+            else
+            {
+                entity.SubTotal = basket.SubTotal - totalPrice;
+            }
             _uow.GetRepository<Basket>().UpdateModified(entity);
             return new Response(ResponseType.Success);
         }
+        #endregion
     }
 }

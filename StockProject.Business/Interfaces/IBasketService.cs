@@ -13,6 +13,7 @@ namespace StockProject.Business.Interfaces
     public interface IBasketService : IService<BasketCreateDto, BasketUpdateDto, BasketListDto, Basket>
     {
         Task<IResponse<BasketListDto>> GetByUserIdAsync();
-        Task<IResponse<BasketProductCreateDto>> CreateProductForBasket(BasketProductCreateDto dto);
+        Task<IResponse<BasketProductCreateDto>> CreateProductForBasketAsync(BasketProductCreateDto dto);
+        Task<IResponse> RemoveProductFromBasketAsync(int productId);
     }
 }
