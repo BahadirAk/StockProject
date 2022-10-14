@@ -8,7 +8,6 @@ namespace StockProject.Entities
 {
     public class Order : BaseEntity
     {
-        public int OrderStatusId { get; set; }
         public int BasketId { get; set; }
         public decimal TotalPrice { get; set; }
 

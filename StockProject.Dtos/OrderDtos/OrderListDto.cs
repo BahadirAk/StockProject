@@ -11,7 +11,6 @@ namespace StockProject.Dtos.OrderDtos
     public class OrderListDto : IDto
     {
         public int Id { get; set; }
-        public string OrderStatusName { get; set; }
         public BasketListDto Basket { get; set; }
         public decimal TotalPrice { get; set; }
         public DateTime CreatedDate { get; set; }

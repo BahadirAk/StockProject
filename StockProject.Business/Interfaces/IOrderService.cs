@@ -12,7 +12,8 @@ namespace StockProject.Business.Interfaces
     public interface IOrderService : IService<OrderCreateDto, OrderUpdateDto, OrderListDto, Order>
     {
         Task<IResponse<List<OrderListDto>>> GetOrdersByUserIdAsync(int userId);
-        Task<IResponse<List<OrderListDto>>> GetActiveOrdersByUserIdAsync(int userId);
+        //Task<IResponse<List<OrderListDto>>> GetActiveOrdersByUserIdAsync(int userId);
         Task<IResponse<List<OrderListDto>>> GetOrdersByAuthorizedUserIdAsync();
+        Task<IResponse<OrderCreateDto>> CreateAsync();
     }
 }

@@ -115,20 +115,35 @@ namespace StockProject.Business.Services
                         IsDeleted = false
                     };
                     await _uow.GetRepository<User>().CreateAsync(mappedUser);
+                    await _uow.SaveChangesAsync();
                     await _uow.GetRepository<UserRole>().CreateAsync(new UserRole
                     {
-                        User = mappedUser,
+                        UserId = mappedUser.Id,
                         RoleId = 2,
                         CreatedDate = DateTime.Now,
                         ModifiedDate = DateTime.Now,
                         IsDeleted = false
                     });
+                    var createBasketResult = await CreateBasketForUserAsync(mappedUser.Id);
                     await _uow.SaveChangesAsync();
                     return new Response<UserCreateDto>(ResponseType.Success, dto);
                 }
                 return new Response<UserCreateDto>(ResponseType.ValidationError, $"{dto.Username} böyle bir kullanıcı mevcut!!!");
             }
             return new Response<UserCreateDto>(dto, validationResult.ConvertToCustomValidationError());
+        }
+        private async Task<IResponse> CreateBasketForUserAsync(int userId)
+        {
+            var basket = new Basket
+            {
+                UserId = userId,
+                SubTotal = 0,
+                CreatedDate = DateTime.Now,
+                ModifiedDate = DateTime.Now,
+                IsDeleted = false
+            };
+            await _uow.GetRepository<Basket>().CreateAsync(basket);
+            return new Response(ResponseType.Success);
         }
     }
 }

@@ -12,8 +12,8 @@ namespace StockProject.Business.ValidationRules
     {
         public OrderCreateDtoValidator()
         {
-            this.RuleFor(x => x.ProductId).NotEmpty();
-            this.RuleFor(x => x.Quantity).NotEmpty();
+            this.RuleFor(x => x.BasketId).NotEmpty();
+            this.RuleFor(x => x.TotalPrice).NotEmpty();
         }
     }
 }

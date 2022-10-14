@@ -28,14 +28,14 @@ namespace StockProject.API.Controllers
             var orders = await _orderService.GetAllAsync();
             return Ok(orders.Data);
         }
-        [Authorize(Roles = "Admin")]
-        [HttpGet]
-        [Route("getActiveOrders")]
-        public async Task<IActionResult> GetActiveOrders()
-        {
-            var orders = await _orderService.GetActivesAsync();
-            return Ok(orders.Data);
-        }
+        //[Authorize(Roles = "Admin")]
+        //[HttpGet]
+        //[Route("getActiveOrders")]
+        //public async Task<IActionResult> GetActiveOrders()
+        //{
+        //    var orders = await _orderService.GetActivesAsync();
+        //    return Ok(orders.Data);
+        //}
         [Authorize(Roles = "Admin")]
         [HttpGet]
         [Route("getOrdersByUserId")]
@@ -44,20 +44,20 @@ namespace StockProject.API.Controllers
             var orders = await _orderService.GetOrdersByUserIdAsync(userId);
             return Ok(orders.Data);
         }
-        [Authorize(Roles = "Admin")]
-        [HttpGet]
-        [Route("getActiveOrdersByUserId")]
-        public async Task<IActionResult> GetActiveOrdersByUserId(int userId)
-        {
-            var orders = await _orderService.GetActiveOrdersByUserIdAsync(userId);
-            return Ok(orders.Data);
-        }
+        //[Authorize(Roles = "Admin")]
+        //[HttpGet]
+        //[Route("getActiveOrdersByUserId")]
+        //public async Task<IActionResult> GetActiveOrdersByUserId(int userId)
+        //{
+        //    var orders = await _orderService.GetActiveOrdersByUserIdAsync(userId);
+        //    return Ok(orders.Data);
+        //}
         [Authorize(Roles = "Member")]
         [HttpPost]
         [Route("createOrder")]
-        public async Task<IActionResult> Create(OrderCreateDto dto)
+        public async Task<IActionResult> Create()
         {
-            var order = await _orderService.CreateAsync(dto);
+            var order = await _orderService.CreateAsync();
             return Created(string.Empty, order);
         }
         [Authorize(Roles = "Member")]

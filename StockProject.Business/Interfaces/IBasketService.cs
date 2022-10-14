@@ -12,6 +12,7 @@ namespace StockProject.Business.Interfaces
 {
     public interface IBasketService : IService<BasketCreateDto, BasketUpdateDto, BasketListDto, Basket>
     {
+        Task<IResponse<BasketListDto>> GetActiveBasketByIdAsync(int id);
         Task<IResponse<BasketListDto>> GetByIdAsync(int id);
         Task<IResponse<BasketListDto>> GetByUserIdAsync();
         Task<IResponse<BasketProductCreateDto>> CreateProductForBasketAsync(BasketProductCreateDto dto);
