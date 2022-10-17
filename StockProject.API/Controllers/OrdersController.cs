@@ -60,32 +60,32 @@ namespace StockProject.API.Controllers
             var order = await _orderService.CreateAsync();
             return Created(string.Empty, order);
         }
-        [Authorize(Roles = "Member")]
-        [HttpPost]
-        [Route("updateOrder")]
-        public async Task<IActionResult> Update(OrderUpdateDto dto)
-        {
-            var checkOrder = await _orderService.GetByIdAsync(dto.Id);
-            if (checkOrder == null)
-            {
-                return NotFound(checkOrder.Data.Id);
-            }
-            await _orderService.UpdateAsync(dto);
-            return NoContent();
-        }
-        [Authorize(Roles = "Member")]
-        [HttpDelete]
-        [Route("removeOrder")]
-        public async Task<IActionResult> Remove(int id)
-        {
-            var checkOrder = await _orderService.GetByIdAsync(id);
-            if (checkOrder == null)
-            {
-                return NotFound(checkOrder.Data.Id);
-            }
-            await _orderService.RemoveAsync(id);
-            return NoContent();
-        }
+        //[Authorize(Roles = "Member")]
+        //[HttpPost]
+        //[Route("updateOrder")]
+        //public async Task<IActionResult> Update(OrderUpdateDto dto)
+        //{
+        //    var checkOrder = await _orderService.GetByIdAsync(dto.Id);
+        //    if (checkOrder == null)
+        //    {
+        //        return NotFound(checkOrder.Data.Id);
+        //    }
+        //    await _orderService.UpdateAsync(dto);
+        //    return NoContent();
+        //}
+        //[Authorize(Roles = "Member")]
+        //[HttpDelete]
+        //[Route("removeOrder")]
+        //public async Task<IActionResult> Remove(int id)
+        //{
+        //    var checkOrder = await _orderService.GetByIdAsync(id);
+        //    if (checkOrder == null)
+        //    {
+        //        return NotFound(checkOrder.Data.Id);
+        //    }
+        //    await _orderService.RemoveAsync(id);
+        //    return NoContent();
+        //}
         [Authorize(Roles = "Member")]
         [HttpGet]
         [Route("getMyOrders")]

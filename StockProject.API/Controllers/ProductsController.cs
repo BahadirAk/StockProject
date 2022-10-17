@@ -48,10 +48,10 @@ namespace StockProject.API.Controllers
         [Route("updateProduct")]
         public async Task<IActionResult> Update(ProductUpdateDto dto)
         {
-            var checkProduct = _productService.GetByIdAsync(dto.Id);
+            var checkProduct = await _productService.GetByIdAsync(dto.Id);
             if (checkProduct == null)
             {
-                return NotFound(checkProduct.Id);
+                return NotFound(checkProduct.Data.Id);
             }
             await _productService.UpdateAsync(dto);
             return NoContent();
@@ -61,10 +61,10 @@ namespace StockProject.API.Controllers
         [Route("removeProduct")]
         public async Task<IActionResult> Remove(int id)
         {
-            var checkProduct = _productService.GetByIdAsync(id);
+            var checkProduct = await _productService.GetByIdAsync(id);
             if (checkProduct == null)
             {
-                return NotFound(checkProduct.Id);
+                return NotFound(checkProduct.Data.Id);
             }
             await _productService.RemoveAsync(id);
             return NoContent();
